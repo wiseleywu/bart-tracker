@@ -85,10 +85,38 @@ def get_train_count(bsa_type, debug=False):
     else:
         sys.exit("API Error! HTTP response code {} received".format(response.status_code))
 
-bsa_response = get_advisory(SECTION[0], debug=True)
+def get_elevator_outage(bsa_type, debug=False):
+    response = requests.get(SITE + '{}.aspx?cmd={}&key={}'.format(bsa_type, 'elev', API_KEY))
+    if response.status_code == requests.codes.ok:
+        root = ET.fromstring(response.content)
+        keys = {}
+        for i, j in enumerate(root):
+            keys[j.tag] = i
+        date = access_xml_element(root, keys.get('date'), attr='text')
+        time = access_xml_element(root, keys.get('time'), attr='text')
+        bsa = access_xml_element(root, keys.get('bsa'))
+        bsa_id = bsa.attrib.get('id')
+
+        bsa_keys = {}
+        for i, j in enumerate(bsa):
+            bsa_keys[j.tag] = i
+        equipment_type = access_xml_element(bsa, bsa_keys.get('type'), attr='text')
+        station = access_xml_element(bsa, bsa_keys.get('station'), attr='text')
+        message = access_xml_element(bsa, bsa_keys.get('description'), attr='text')
+        sms = access_xml_element(bsa, bsa_keys.get('sms_text'), attr='text')
+
+        if debug:
+            return root
+        else:
+            return [date, time, bsa_id, equipment_type, station, message, sms]
+
+elev_response = get_elevator_outage(SECTION[0])
+elev_response = ['None' if i is None else i for i in elev_response]
+
+bsa_response = get_advisory(SECTION[0])
 bsa_response = ['None' if i is None else i for i in bsa_response]
 
-count_response = get_train_count(SECTION[0], debug=True)
+count_response = get_train_count(SECTION[0])
 count_response = ['None' if i is None else i for i in count_response]
 
 
@@ -97,3 +125,6 @@ with open(os.path.join(SAVE_PATH, 'advisory.txt'), 'a') as f:
 
 with open(os.path.join(SAVE_PATH, 'train_count.txt'),'a') as f:
     f.write(','.join(count_response)+'\n')
+
+with open(os.path.join(SAVE_PATH, 'elevator_status.txt'),'a') as f:
+    f.write(','.join(elev_response)+'\n')
