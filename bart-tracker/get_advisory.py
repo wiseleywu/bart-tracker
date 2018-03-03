@@ -13,9 +13,9 @@ SAVE_PATH = os.environ['SAVE_PATH']
 
 
 def access_xml_element(element, key, attr=None):
-    if key and attr:
+    if key!=None and attr:
         return getattr(element[key], attr)
-    elif key and not attr:
+    elif key!=None and not attr:
         return element[key]
 
 def get_advisory(bsa_type, debug=False):
@@ -104,6 +104,9 @@ def get_elevator_outage(bsa_type, debug=False):
         station = access_xml_element(bsa, bsa_keys.get('station'), attr='text')
         message = access_xml_element(bsa, bsa_keys.get('description'), attr='text')
         sms = access_xml_element(bsa, bsa_keys.get('sms_text'), attr='text')
+
+        message = '"{}"'.format(message)
+        sms = '"{}"'.format(sms)
 
         if debug:
             return root
