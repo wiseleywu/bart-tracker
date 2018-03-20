@@ -36,6 +36,8 @@ def get_advisory(bsa_type, debug=False):
             child.text and msg.append(child.text.lower())
         if 'invalid key' in msg:
             sys.exit('Error found in response: {}'.format(','.join(msg)))
+        elif 'no delays reported.' in msg:
+            sys.exit('No delays reported.')
 
         keys = {}
         for i, j in enumerate(root):
