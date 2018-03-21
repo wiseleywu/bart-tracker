@@ -4,6 +4,7 @@ import requests
 import xml.etree.ElementTree as ET
 import os
 import sys
+import subprocess
 
 
 API_KEY = os.environ['BART_API_KEY']
@@ -37,7 +38,7 @@ def get_advisory(bsa_type, debug=False):
         if 'invalid key' in msg:
             sys.exit('Error found in response: {}'.format(','.join(msg)))
         elif 'no delays reported.' in msg:
-            sys.exit('No delays reported.')
+            return
 
         keys = {}
         for i, j in enumerate(root):
@@ -60,6 +61,14 @@ def get_advisory(bsa_type, debug=False):
         sms = '"{}"'.format(sms)
 
         posted = access_xml_element(bsa, bsa_keys.get('posted'), attr='text')
+
+        tail = subprocess.Popen('tail -n 1 {}'.format(os.path.join(SAVE_PATH, 'advisory.txt')),
+                                stdout=subprocess.PIPE,
+                                shell=True).communicate()[0]
+        last_bsa =int(tail.split(',')[2])
+
+        if int(bsa_id) == last_bsa:
+            return
 
         if debug:
             return response
@@ -165,14 +174,15 @@ if __name__ == '__main__':
     elev_response = ['None' if i is None else i for i in elev_response]
 
     bsa_response = get_advisory(SECTION[0])
-    bsa_response = ['None' if i is None else i for i in bsa_response]
+    if bsa_response:
+        bsa_response = ['None' if i is None else i for i in bsa_response]
 
     count_response = get_train_count(SECTION[0])
     count_response = ['None' if i is None else i for i in count_response]
 
-
-    with open(os.path.join(SAVE_PATH, 'advisory.txt'), 'a') as f:
-        f.write(','.join(bsa_response)+'\n')
+    if bsa_response:
+        with open(os.path.join(SAVE_PATH, 'advisory.txt'), 'a') as f:
+            f.write(','.join(bsa_response)+'\n')
 
     with open(os.path.join(SAVE_PATH, 'train_count.txt'),'a') as f:
         f.write(','.join(count_response)+'\n')
