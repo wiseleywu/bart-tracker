@@ -122,7 +122,7 @@ def get_elevator_outage(bsa_type, debug=False):
         tail = subprocess.Popen('tail -n 1 {}'.format(os.path.join(SAVE_PATH, 'elevator_status.txt')),
                                 stdout=subprocess.PIPE,
                                 shell=True).communicate()[0]
-        last_msg =int(tail.split(',')[5])
+        last_msg =tail.split(',')[5]
 
         if message == last_msg:
             return
