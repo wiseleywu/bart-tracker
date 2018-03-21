@@ -119,6 +119,14 @@ def get_elevator_outage(bsa_type, debug=False):
         message = '"{}"'.format(message)
         sms = '"{}"'.format(sms)
 
+        tail = subprocess.Popen('tail -n 1 {}'.format(os.path.join(SAVE_PATH, 'elevator_status.txt')),
+                                stdout=subprocess.PIPE,
+                                shell=True).communicate()[0]
+        last_msg =int(tail.split(',')[5])
+
+        if message == last_msg:
+            return
+
         if debug:
             return root
         else:
@@ -171,7 +179,8 @@ def get_station(API_KEY, station):
 
 if __name__ == '__main__':
     elev_response = get_elevator_outage(SECTION[0])
-    elev_response = ['None' if i is None else i for i in elev_response]
+    if elev_response:
+        elev_response = ['None' if i is None else i for i in elev_response]
 
     bsa_response = get_advisory(SECTION[0])
     if bsa_response:
@@ -187,5 +196,6 @@ if __name__ == '__main__':
     with open(os.path.join(SAVE_PATH, 'train_count.txt'),'a') as f:
         f.write(','.join(count_response)+'\n')
 
-    with open(os.path.join(SAVE_PATH, 'elevator_status.txt'),'a') as f:
-        f.write(','.join(elev_response)+'\n')
+    if elev_response:
+        with open(os.path.join(SAVE_PATH, 'elevator_status.txt'),'a') as f:
+            f.write(','.join(elev_response)+'\n')
