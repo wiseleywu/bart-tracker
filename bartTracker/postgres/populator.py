@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-from datetime import date
 from base import Session, engine, Base
 from tables import Station, TrainCount, Advisory, Elevator
-import bartTracker.api.access_bart_api as api
+import bartTracker.api.stations as station_api
 
 import os
 
@@ -24,8 +23,8 @@ session = Session()
 # populate station db
 print "popluating Bart stations DB..."
 stns_list = []
-stns = api.get_station(API_KEY, 'ALL')
-for stn in stns:
+stns_dict = map(lambda x: x.get_station_dict(), station_api.get_all_stations())
+for stn in stns_dict:
     stns_list.append(Station(stn))
 
 # persists data
